@@ -1,0 +1,8 @@
+--reporter spec
+--recursive
+--slow 2000
+--timeout 300000
+--require should
+--bail
+-c
+--use_strict
