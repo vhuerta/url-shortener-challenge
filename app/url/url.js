@@ -1,10 +1,20 @@
-const uuidv4 = require('uuid/v4');
-const { domain } = require('../../environment');
+const uuidv4 = require("uuid/v4");
+const { domain } = require("../../environment");
 const SERVER = `${domain.protocol}://${domain.host}`;
 
-const UrlModel = require('./schema');
-const parseUrl = require('url').parse;
-const validUrl = require('valid-url');
+const UrlModel = require("./schema");
+const CounterModel = require("../counter/schema");
+const parseUrl = require("url").parse;
+const validUrl = require("valid-url");
+const { encode } = require("../lib/shortner");
+
+function getNextSequence() {
+  return CounterModel.findOneAndUpdate(
+    { id: "urls" },
+    { $inc: { seq: 1 }},
+    { upsert: true, new: true }
+  );
+}
 
 /**
  * Lookup for existant, active shortened URLs by hash.
@@ -19,14 +29,21 @@ async function getUrl(hash) {
 
 /**
  * Generate an unique hash-ish- for an URL.
- * TODO: Deprecated the use of UUIDs.
- * TODO: Implement a shortening algorithm
  * @param {string} id
  * @returns {string} hash
  */
-function generateHash(url) {
-  // return uuidv5(url, uuidv5.URL);
-  return uuidv4();
+async function generateHash() {
+  let sequence;
+
+  try {
+    sequence = await getNextSequence();
+  } catch(e) {}
+   
+  if(!sequence || !sequence.seq) {
+    throw new Error("Cannot generate sequence");
+  }
+
+  return encode(sequence.seq);
 }
 
 /**
@@ -46,16 +63,15 @@ function generateRemoveToken() {
  * @returns {object}
  */
 async function shorten(url, hash) {
-
   if (!isValid(url)) {
-    throw new Error('Invalid URL');
+    throw new Error("Invalid URL");
   }
 
   // Get URL components for metrics sake
   const urlComponents = parseUrl(url);
-  const protocol = urlComponents.protocol || '';
-  const domain = `${urlComponents.host || ''}${urlComponents.auth || ''}`;
-  const path = `${urlComponents.path || ''}${urlComponents.hash || ''}`;
+  const protocol = urlComponents.protocol || "";
+  const domain = `${urlComponents.host || ""}${urlComponents.auth || ""}`;
+  const path = `${urlComponents.path || ""}${urlComponents.hash || ""}`;
 
   // Generate a token that will alow an URL to be removed (logical)
   const removeToken = generateRemoveToken();
@@ -81,7 +97,6 @@ async function shorten(url, hash) {
     hash,
     removeUrl: `${SERVER}/${hash}/remove/${removeToken}`
   };
-
 }
 
 /**
@@ -99,4 +114,4 @@ module.exports = {
   generateHash,
   generateRemoveToken,
   isValid
-}
+};

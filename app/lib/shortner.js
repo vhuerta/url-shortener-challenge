@@ -17,7 +17,7 @@ function encode(number) {
     number = Math.floor(number / BASE);
   }
 
-  return string;
+  return string.padStart(3, CHAR_MAP.charAt(0));
 }
 
 /**

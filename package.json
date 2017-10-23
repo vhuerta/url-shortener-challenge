@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "node server/server.js",
+    "start:watch": "./node_modules/.bin/nodemon server/server.js",
     "test": "NODE_ENV=test ./node_modules/.bin/mocha -b"
   },
   "author": "",
@@ -29,6 +31,7 @@
     "eslint": "^4.9.0",
     "eslint-plugin-node": "^5.2.0",
     "mocha": "^4.0.1",
+    "nodemon": "^1.12.1",
     "should": "^13.1.2"
   }
 }
