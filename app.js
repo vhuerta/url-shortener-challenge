@@ -24,7 +24,7 @@ app.use(function (err, req, res, next) {
   res.locals.error = req.app.get('env') === 'development' ? err : {};
   const response = {
     message: err.message,
-    code: err.status || 500
+    status: err.status || 500
   };
 
   if(err.data) {
@@ -32,7 +32,7 @@ app.use(function (err, req, res, next) {
   }
   
   // render the error page
-  res.status(response.code);
+  res.status(response.status);
   res.json(response);
 });
 

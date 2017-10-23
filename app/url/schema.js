@@ -34,6 +34,9 @@ module.exports = mongo.model('Url', new mongoose.Schema({
   },
   removedAt: Date,
 
+  lastVisit: Date,
+  hits: Number,
+
   active: {
     type: Boolean,
     required: true,

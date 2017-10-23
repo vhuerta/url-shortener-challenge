@@ -11,8 +11,24 @@ const { encode } = require("../lib/shortner");
 function getNextSequence() {
   return CounterModel.findOneAndUpdate(
     { id: "urls" },
-    { $inc: { seq: 1 }},
+    { $inc: { seq: 1 } },
     { upsert: true, new: true }
+  );
+}
+
+async function hit(_id) {
+  return UrlModel.findOneAndUpdate(
+    { _id },
+    { $inc: { hits: 1 }, $set: { lastVisit: new Date() } },
+    { new: true }
+  );
+}
+
+async function remove(hash, removeToken) {
+  return UrlModel.findOneAndUpdate(
+    { removeToken, hash },
+    { $set: { removedAt: new Date(), active: false } },
+    { new: true }
   );
 }
 
@@ -37,9 +53,11 @@ async function generateHash() {
 
   try {
     sequence = await getNextSequence();
-  } catch(e) {}
-   
-  if(!sequence || !sequence.seq) {
+  } catch (e) {
+    console.error(err);
+  }
+
+  if (!sequence || !sequence.seq) {
     throw new Error("Cannot generate sequence");
   }
 
@@ -88,8 +106,17 @@ async function shorten(url, hash) {
     active: true
   });
 
-  const saved = await shortUrl.save();
-  // TODO: Handle save errors
+  let saved;
+
+  try {
+    saved = await shortUrl.save();
+  } catch (err) {
+    console.error(err);
+  }
+
+  if (!saved) {
+    throw new Error("Cannot save url");
+  }
 
   return {
     url,
@@ -113,5 +140,7 @@ module.exports = {
   getUrl,
   generateHash,
   generateRemoveToken,
-  isValid
+  isValid,
+  hit,
+  remove
 };
